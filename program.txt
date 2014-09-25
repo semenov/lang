@@ -1,0 +1,10 @@
+(io.print "Hello world")
+
+(io.print "Sum" (math.+ 1 2))
+
+(dump "Test string")
+
+(dump lol)
+
+(def age 27)
+(dump (get age))

@@ -1,0 +1,36 @@
+(print
+	"Sum"
+	(+ 1 2)
+)
+
+(fn greeting (:str name :int age)
+	"What time is it?"
+	"GANGSTA"
+)
+
+(macro if (condition positive negative)
+	(check condition (run positive))
+	(check (not condition) negative)
+)
+
+(if (< a 5)
+	(
+		(connect-to-database)
+		(show-data)
+	)
+	false
+
+)
+
+(macro while (condition actions*)
+	(loop
+		(check condition (run actions))
+		condition
+	)
+)
+
+(print (greeting))
+
+(print (< 2 1))
+
+(print "Difference" (- 5 4))
