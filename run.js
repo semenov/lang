@@ -75,6 +75,35 @@ var core = {
 	'get': function(params) {
 		var name = params[0].value;
 		return variables[name];
+	},
+
+	'block': function(params) {
+		return { type: 'block', value: params };
+	},
+
+	'run': function(params) {
+		var block = expand(params[0]);
+		var results = expandAll(block.value);
+		return _.last(results);
+	},
+
+	'when': function(params) {
+		var condition = expand(params[0]);
+		if (condition.type == 'atom' && condition.value == 'true') {
+			return expand(params[1]);
+		} else {
+			return nil();
+		}
+
+	},
+
+	'not': function(params) {
+		var param = expand(params[0]);
+		if (param.type == 'atom' && param.value == 'true') {
+			return nil();
+		} else {
+			return atom('true');
+		}
 	}
 };
 
