@@ -1,0 +1,3 @@
+def first-name 'Bob'
+def last-name 'Johnson'
+print first-name

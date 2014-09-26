@@ -1,0 +1,46 @@
+object config:
+	api_url: 'http://example.com/api/'
+
+module http:
+	function get:
+
+weather = object:
+	load: function:
+		method_name = 'weather'
+		method_url = string.concat [api_url, method_name]
+
+		http_response = http.get method_url
+		weather_data = json.parse http_response.data
+
+
+(var config {
+	api_url: 'http://example.com/api/'
+})
+
+module weather
+	function load
+		def method-name 'weather'
+		def method-url (string.concat (api-url) (method-name))
+		def http-response (http.get (method-url))
+		def weather-data
+			json.parse http_response.data
+
+func print [str length]
+
+
+
+
+# [] - массив
+# {} - объект
+
+
+sruct User {
+  name: String = "500"
+  age: Int
+}
+
+func createUser(user: User): Bool {
+
+}
+
+array.map(users, (user) { user.name })

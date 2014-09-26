@@ -1,35 +1,70 @@
-start
-	= program
+Start
+	= Program
 
-program
-	= exps:spacedexpression+ {
+Program
+	= fns:Function+ {
 		return {
 			type: 'program',
 			line: line(),
-			value: exps
-		};
+			statements: fns
+		}
 	}
 
-expression
-	= string
-	/ float
-	/ integer
-	/ atom
-	/ list
+WhiteSpace "whitespace"
+  = '\t'
+  / '\v'
+  / '\f'
+  / ' '
+  / '\u00A0'
+  / '\uFEFF'
 
-spacedexpression
-	= space*  exp:expression space* {
-		return exp
+LineTerminator
+  = [\n\r\u2028\u2029]
+
+LineTerminatorSequence "end of line"
+  = '\n'
+  / '\r\n'
+  / '\r'
+  / '\u2028'
+  / '\u2029'
+
+__
+  = (WhiteSpace / LineTerminatorSequence)*
+
+_
+  = WhiteSpace*
+
+
+EOS
+	= __ ';'
+	/ _ LineTerminatorSequence
+	/ _ &'}'
+	/ __ EOF
+
+EOF
+ 	= !.
+
+Function
+	= 'fn' _ name:Identifier _ block:Block {
+		return {
+			type: 'function',
+			name: name,
+			line: line(),
+			body: block
+		}
 	}
 
-space
-	= ' '
-	/ '\r'
-	/ '\n'
-	/ '\t'
+Identifier
+	= first:[a-z] rest:[a-z0-9-]* {
+		return {
+			type: 'identifier',
+			line: line(),
+			value: first + rest.join('')
+		}
+	}
 
-float
-	= digit+ '.' digit+ {
+Float
+	= Digit+ '.' Digit+ {
 		return {
 			type: 'float',
 			line: line(),
@@ -37,20 +72,20 @@ float
 		};
 	}
 
-integer
-	= digit+ {
+Integer
+	= Digit+ {
 		return {
-			type: 'int',
+			type: 'float',
 			line: line(),
 			value: Number(text())
 		};
 	}
 
-digit
+Digit
 	= [0-9]
 
-string
-	= '"' str:[^"]* '"' {
+String
+	= "'" str:[^']* "'" {
 		return {
 			type: 'string',
 			line: line(),
@@ -58,24 +93,38 @@ string
 		};
 	}
 
-
-atom =
-    chars:validchar+ {
-    	return {
-    		type: 'atom',
-    		line: line(),
-    		value: chars.join("")
-    	};
+Block
+	= '{' __ body:(StatementList __)? '}' {
+		return {
+			type: 'BlockStatement',
+			body: body[0]
+		};
     }
 
-validchar
-    = [0-9a-zA-Z_?!+\-=@#$%^&*/<>:.]
+StatementList
+	= first:Statement rest:(__ Statement)* {
+		var result = [];
+		result.push(first);
+		rest.forEach(function(item) {
+			result.push(item[1]);
+		});
 
-list
-	= '(' exps:spacedexpression* ')' {
 		return {
-			type: 'list',
+			type: 'StatementList',
 			line: line(),
-			value: exps
+			value: result
 		};
 	}
+
+Statement
+	= ExpressionStatement
+
+ExpressionStatement
+	= exp:Expression EOS {
+		return exp;
+	}
+
+Expression
+	= String
+	/ Float
+	/ Integer

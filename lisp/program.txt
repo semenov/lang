@@ -1,0 +1,27 @@
+(io.print "Hello world")
+
+(io.print "Sum" (math.+ 1 2))
+
+(dump "Test string")
+
+(dump lol)
+
+(def print-moto
+	(block
+		(io.print "IN")
+		(io.print "DA")
+		(io.print "BLOCK")))
+
+(run (get print-moto))
+
+(run
+	(block
+		(def age 27)
+		(io.print "Age:" (get age))))
+
+
+(when (not false) (io.print "So true!"))
+
+(def numbers [13 42 100])
+
+(dump (get-at (get numbers) 2))

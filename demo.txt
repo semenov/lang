@@ -1,0 +1,85 @@
+Примитивные типы и их значения по умолчанию:
+
+:string = ''
+:int = 0
+:float = 0.0
+:array = []
+:map = {}
+:bool = false
+:func = [] -> null
+:null = null
+
+
+struct :user
+	:int id
+	:string name
+
+
+def get-data-from-url(:string url)
+	:string content = http.get(:string url)
+	:map data = json.parse(content)
+	return data
+
+
+namespace list
+fn get [:list lst, :int index] :auto
+	do-some-stuff()
+	return null
+
+namespace list
+platform any
+fn each [:list items, :fn iterator] :auto {
+	:int len = length(items)
+	:int index
+	# standard loop, nothing special
+	loop {
+		if index == len {
+			break
+		}
+		iterator(items[index])
+		index++
+	}
+}
+
+
+
+namespace list
+fn map [:list items, :fn transformer] :auto
+	:array result
+	each items, fn [item]
+		append result, transformer(item)
+
+
+
+
+fn function-with-clojure :bool {
+	:array items = [8, 16, 32]
+	array.map items, [item] {
+		item + 1
+	}
+}
+
+
+fn get-user-name [id :int] :string
+	import http-client.get-data-from-url
+	:string url = 'http://example.com/api/user' + String(id)
+	data = get-data-from-url!(url)
+	return map.get(data, 'key')
+
+
+def new-user [:int id, :string name] :user
+	if id == 0
+		throw 'id can not be equal to null'
+	:user user
+	user.id = id
+	user.name = name
+	return user
+
+def do-array-manipulation :array
+
+	:array stuff = ['lil', 0, 17, 'yau']
+	:auto first-element = array.first(stuff)
+	:int len = array.length(stuff)
+
+
+	return array.map(stuff, [:int item] -> item + 1)

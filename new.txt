@@ -1,0 +1,30 @@
+
+
+fn hello [string name] {
+	var hello-string ""
+	set hello-string (string.concat ["Hello" name])
+	print (string.concat ["Hello" name])
+
+	if (string.empty hello-string) {
+
+	} else {
+
+	}
+
+	if (equal (size users) 5) {
+
+	}
+
+	loop {
+
+	}
+
+	select user-count
+
+	[]
+
+
+	set names (map users :user { get user :name })
+
+	var user (get users i)
+}
