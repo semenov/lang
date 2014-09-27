@@ -2,13 +2,22 @@ Start
 	= Program
 
 Program
-	= fns:Function+ {
+	= statements:(TopLevelStatementSpaced)* {
 		return {
 			type: 'program',
 			line: line(),
-			statements: fns
+			instructions: statements
 		}
 	}
+
+TopLevelStatementSpaced
+	= __ statement:TopLevelStatement __ {
+		return statement;
+	}
+
+TopLevelStatement
+	= Function
+	/ Statement
 
 WhiteSpace "whitespace"
   = '\t'
@@ -44,8 +53,8 @@ EOS
 EOF
  	= !.
 
-Function
-	= 'fn' _ name:Identifier _ block:Block {
+Function "function declaration"
+	= 'fn' _ name:Identifier arguments:ArgumentsDeclaration _ block:Block {
 		return {
 			type: 'function',
 			name: name,
@@ -54,8 +63,16 @@ Function
 		}
 	}
 
-Identifier
-	= first:[a-z] rest:[a-z0-9-]* {
+ArgumentsDeclaration
+	= '(' ')' {
+		return {
+			type: 'arguments_declaration',
+			line: line()
+		}
+	}
+
+Identifier "identifier"
+	= first:[a-z] rest:[a-z0-9_]* {
 		return {
 			type: 'identifier',
 			line: line(),
@@ -63,7 +80,38 @@ Identifier
 		}
 	}
 
-Float
+CamelIdentifier "camel case identifier"
+	= first:[A-Z] rest:[A-Za-z0-9]* {
+		return {
+			type: 'camel_identifier',
+			line: line(),
+			value: first + rest.join('')
+		}
+	}
+
+VariableDeclaration
+	= 'let' _ variable:Identifier type:VariableDeclarationType? value:VariableDeclarationAssignment? {
+		return {
+			type: 'variable_declaration',
+			line: line(),
+			variable: variable.value,
+			variableType: type,
+			value: value
+		}
+	}
+
+VariableDeclarationType
+	= ':' _ type:CamelIdentifier {
+		return type.value;
+	}
+
+VariableDeclarationAssignment
+	= _ '=' __ value:Expression {
+		return value;
+	}
+
+
+Float "float literal"
 	= Digit+ '.' Digit+ {
 		return {
 			type: 'float',
@@ -72,19 +120,19 @@ Float
 		};
 	}
 
-Integer
+Integer "integer literal"
 	= Digit+ {
 		return {
-			type: 'float',
+			type: 'int',
 			line: line(),
 			value: Number(text())
 		};
 	}
 
-Digit
+Digit "digit"
 	= [0-9]
 
-String
+String "string literal"
 	= "'" str:[^']* "'" {
 		return {
 			type: 'string',
@@ -93,10 +141,11 @@ String
 		};
 	}
 
-Block
+
+Block "code block"
 	= '{' __ body:(StatementList __)? '}' {
 		return {
-			type: 'BlockStatement',
+			type: 'block_statement',
 			body: body[0]
 		};
     }
@@ -110,7 +159,7 @@ StatementList
 		});
 
 		return {
-			type: 'StatementList',
+			type: 'statement_list',
 			line: line(),
 			value: result
 		};
@@ -128,3 +177,4 @@ Expression
 	= String
 	/ Float
 	/ Integer
+	/ VariableDeclaration

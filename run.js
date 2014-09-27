@@ -6,19 +6,22 @@ var rules = fs.readFileSync('lang.pegjs', 'utf-8');
 var programCode = fs.readFileSync('program.txt', 'utf-8');
 var util = require('util');
 
+console.log('=== Program ===', '\n');
+console.log(programCode, '\n\n');
 
-console.log('program [', '\n', programCode, '\n]\n');
 var parser = peg.buildParser(rules);
 
 try {
 	var ast = parser.parse(programCode);
 
-	console.log(JSON.stringify(ast, null, 4));
+	console.log('=== Syntax tree ===', '\n');
+	console.log(util.inspect(ast, { depth: null, colors: true }));
+	console.log('\n');
 
 	//run(ast);
 } catch (e) {
 	if (e.name != 'SyntaxError') throw e;
 
-	console.log('input [', programCode, ']');
-	console.log('exception', e);
+	console.log('=== Syntax Error ===', '\n');
+	console.log(util.inspect(e, { depth: null, colors: true }));
 }

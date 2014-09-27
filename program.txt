@@ -1,6 +1,14 @@
-fn do-stuff {
-	'lol'
+fn main() {
+    'lol'
 
-	123
-	'wut'
+    123
+    'wut'
 }
+
+777
+
+let count: Int = 0
+
+let file_path: String
+
+let name = 'Megatron'

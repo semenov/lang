@@ -1,0 +1,94 @@
+# Inspired by Rust and Swift
+
+# variable declaration
+
+    let name
+    let name = "Megatron"
+    let name: String = "Megatron"
+
+# while loop
+
+    while count < 10 {
+        println("count is ", count)
+        count += 1
+    }
+
+# if
+
+    if item == "salad" {
+        price = 3.50;
+    } else if item == "muffin" {
+        price = 2.25;
+    } else {
+        price = 2.00;
+    }
+
+# function declaration
+
+    fn greet(name, age) {
+        ...
+    }
+
+    fn greet(name: String, age: Int) -> String {
+        ...
+    }
+
+    fn line(a: Int, b: Int, x: Int) -> Int {
+        a * x + b
+    }
+
+# function call
+
+    greet("Megatron", 1)
+
+# data structures
+
+    struct Point {
+        x: Int
+        y: Int
+    }
+
+    let point: Point
+    point.x = 5
+    point.y = 7
+
+# methods
+
+    method Point.increment() {
+        self.x++
+        self.y++
+    }
+
+# lists
+
+    let name = ["Alice", "Bob", "John"]
+    let name = [
+        "Alice"
+        "Bob"
+        "John"
+    ]
+
+# maps
+
+    let people = { "Alice": 18, "Bob": 20, "John": 25 }
+
+    let people = {
+        "Alice": 18
+        "Bob": 20
+        "John": 25
+    }
+
+    let css_class = {
+        font_size: 10
+        font_family: "Arial"
+    }
+
+# symbols
+
+    :symbol
+
+
+
+
+
+
