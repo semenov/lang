@@ -215,6 +215,44 @@ String "string literal"
 		};
 	}
 
+BinaryOperator
+	= '+'
+	/ '-'
+	/ '*'
+	/ '/'
+	/ '>'
+	/ '<'
+	/ '>='
+	/ '<='
+	/ '=='
+	/ '!='
+
+BinaryOperation
+	= left:SubExpression _ operator:BinaryOperator _ right:SubExpression {
+		return {
+			type: 'BinaryOperation',
+			operator: operator,
+			left: left,
+			right: right,
+			line: line()
+		};
+	}
+
+StructDeclaration
+	= 'struct' _ name:CamelIdentifier _ '{' _ properies:StructPropertiesDeclaration _ '}'
+
+StructPropertiesDeclaration
+	= StructPropertyDeclaration
+
+StructPropertyDeclaration
+	= name:Identifier ':' _ type:CamelIdentifier {
+		return {
+			type: 'StructPropertyDeclaration',
+			name: name,
+			type: type,
+			line: line()
+		};
+	}
 
 Block "code block"
 	= '{' __ body:(StatementList __)? '}' {
@@ -255,5 +293,13 @@ Expression "expession"
 	/ If
 	/ While
 	/ Atom
+	/ BinaryOperation
 	/ VariableAssignment
+	/ Variable
+
+SubExpression "expession"
+	= String
+	/ Float
+	/ Integer
+	/ Atom
 	/ Variable

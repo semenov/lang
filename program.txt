@@ -35,6 +35,10 @@ my_var
 
 ready = true
 
-if ok {
+if count > 5 {
     temperature = 36.6
+}
+
+if name == 'Megatron' {
+    count = count + 1
 }
