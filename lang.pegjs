@@ -113,7 +113,7 @@ VariableDeclarationAssignment
 If
 	= 'if' _ condition:Expression _ trueCase:Block falseCase:Else? {
 		return {
-			type: 'variable_declaration',
+			type: 'if',
 			line: line(),
 			condition: condition,
 			trueCase: trueCase,
@@ -125,6 +125,65 @@ Else
 	= _ 'else' _ body:( Block / If ) {
 		return body;
 	}
+
+While
+	= 'while' _ condition:Expression _ body:Block {
+		return {
+			type: 'while',
+			line: line(),
+			condition: condition,
+			body: body
+		}
+	}
+
+Variable
+	= variable:Identifier {
+		return {
+			type: 'variable',
+			name: variable.value,
+			line: line()
+		}
+	}
+
+VariableAssignment
+	= variable:Variable _ '=' _ value:Expression {
+		return {
+			type: 'variable_assignment',
+			variable: variable,
+			value: value
+		}
+	}
+
+True
+	= 'true' {
+		return {
+			type: 'bool',
+			value: true,
+			line: line()
+		}
+	}
+
+False
+	= 'false' {
+		return {
+			type: 'bool',
+			value: false,
+			line: line()
+		}
+	}
+
+Null
+	= 'null' {
+		return {
+			type: 'null',
+			line: line()
+		}
+	}
+
+Atom
+	= Null
+	/ True
+	/ False
 
 Float "float literal"
 	= Digit+ '.' Digit+ {
@@ -188,9 +247,13 @@ ExpressionStatement
 		return exp;
 	}
 
-Expression
+Expression "expession"
 	= String
 	/ Float
 	/ Integer
 	/ VariableDeclaration
 	/ If
+	/ While
+	/ Atom
+	/ VariableAssignment
+	/ Variable

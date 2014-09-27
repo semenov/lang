@@ -22,3 +22,19 @@ fn main() {
     123
     'wut'
 }
+
+while true {
+    'name'
+}
+
+true
+false
+null
+
+my_var
+
+ready = true
+
+if ok {
+    temperature = 36.6
+}
