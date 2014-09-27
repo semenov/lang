@@ -110,6 +110,21 @@ VariableDeclarationAssignment
 		return value;
 	}
 
+If
+	= 'if' _ condition:Expression _ trueCase:Block falseCase:Else? {
+		return {
+			type: 'variable_declaration',
+			line: line(),
+			condition: condition,
+			trueCase: trueCase,
+			falseCase: falseCase
+		}
+	}
+
+Else
+	= _ 'else' _ body:( Block / If ) {
+		return body;
+	}
 
 Float "float literal"
 	= Digit+ '.' Digit+ {
@@ -178,3 +193,4 @@ Expression
 	/ Float
 	/ Integer
 	/ VariableDeclaration
+	/ If

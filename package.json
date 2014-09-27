@@ -1,0 +1,26 @@
+{
+  "name": "lang",
+  "version": "0.0.0",
+  "description": "",
+  "main": "run.js",
+  "dependencies": {
+    "escodegen": "~1.4.1",
+    "lodash": "~2.4.1",
+    "pegjs": "~0.8.0",
+    "underscore": "~1.7.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/semenov/lang.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/semenov/lang/issues"
+  },
+  "homepage": "https://github.com/semenov/lang"
+}

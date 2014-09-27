@@ -1,9 +1,4 @@
-fn main() {
-    'lol'
 
-    123
-    'wut'
-}
 
 777
 
@@ -12,3 +7,18 @@ let count: Int = 0
 let file_path: String
 
 let name = 'Megatron'
+
+if 'strange' {
+    let name = 'Megatron'
+} else if 'normal' {
+    1
+} else {
+    2
+}
+
+fn main() {
+    'lol'
+
+    123
+    'wut'
+}
