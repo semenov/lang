@@ -283,6 +283,35 @@ NextArrayItem
 		return item;
 	}
 
+Map
+	= '{' __ items:MapItems? __ '}' {
+		return {
+			type: 'Map',
+			items: items,
+			line: line()
+		};
+	}
+
+MapItems
+	= first:MapItem rest:NextMapItem* {
+		return glue(first, rest);
+	}
+
+MapItem
+	= key:(Identifier/String) ':' _ value:Expression {
+		return {
+			key: key.value,
+			value: value,
+			line: line()
+		};
+	}
+
+
+NextMapItem
+	= (',' / LineTerminatorSequence) __ item:MapItem {
+		return item;
+	}
+
 BinaryOperator
 	= '+'
 	/ '-'
@@ -380,6 +409,7 @@ Expression "expession"
 	/ Variable
 	/ Lambda
 	/ Array
+	/ Map
 
 SubExpression "expession"
 	= String

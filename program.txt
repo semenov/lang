@@ -61,3 +61,12 @@ struct Point {
     y: Int
 }
 
+
+users = {
+    bob: 18
+    alice: 17
+    'ugly name': null
+    data: {
+        extra: true
+    }
+}
