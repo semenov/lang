@@ -44,11 +44,6 @@ if name == 'Megatron' {
 }
 
 
-struct Point {
-
-}
-
-
 fn get_user(id: Int, name: String) -> User {
     true
 }
@@ -60,4 +55,9 @@ let listener = (event: ServerEvent) {
 arr = [
     1, 'some str', 3
 ]
+
+struct Point {
+    x: Int
+    y: Int
+}
 

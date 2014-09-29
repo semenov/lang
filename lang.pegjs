@@ -1,3 +1,14 @@
+{
+	function glue(first, rest) {
+		var items = [first];
+		if (rest) {
+			items = items.concat(rest);
+		}
+
+		return items;
+	}
+}
+
 Start
 	= Program
 
@@ -17,6 +28,7 @@ TopLevelStatementSpaced
 
 TopLevelStatement
 	= Function
+	/ Struct
 	/ Statement
 
 WhiteSpace "whitespace"
@@ -72,12 +84,7 @@ ReturnType
 
 FunctionArguments
 	= first:Argument rest:NextArgument* {
-		var args = [first];
-		if (rest) {
-			args = args.concat(rest);
-		}
-
-		return args;
+		return glue(first, rest);
 	}
 
 Argument
@@ -266,12 +273,7 @@ Array
 
 ArrayItems
 	= first:ArrayItem rest:NextArrayItem* {
-		var items = [first];
-		if (rest) {
-			items = items.concat(rest);
-		}
-
-		return items;
+		return glue(first, rest);
 	}
 
 ArrayItem = Expression
@@ -304,26 +306,34 @@ BinaryOperation
 		};
 	}
 
-StructDeclaration
-	= 'struct' _ name:CamelIdentifier _ '{' __ '}' {
+Struct
+	= 'struct' _ name:CamelIdentifier _ '{' __ properies:StructProperties? __ '}' {
 		return {
-			type: 'StructDeclaration',
+			type: 'Struct',
 			name: name.value,
+			properies: properies,
 			line: line()
 		};
 	}
 
-StructPropertiesDeclaration
-	= property:(StructPropertyDeclaration EOS)+
+StructProperties
+	= first:StructProperty rest:NextStructProperty* {
+		return glue(first, rest);
+	}
 
-StructPropertyDeclaration
+StructProperty
 	= name:Identifier ':' _ type:CamelIdentifier {
 		return {
-			type: 'StructPropertyDeclaration',
-			name: name,
-			type: type,
+			type: 'StructProperty',
+			name: name.value,
+			propertyType: type.value,
 			line: line()
 		};
+	}
+
+NextStructProperty
+	= (',' / LineTerminatorSequence) __ property:StructProperty {
+		return property;
 	}
 
 Block "code block"
@@ -365,7 +375,6 @@ Expression "expession"
 	/ If
 	/ While
 	/ Atom
-	/ StructDeclaration
 	/ BinaryOperation
 	/ VariableAssignment
 	/ Variable
