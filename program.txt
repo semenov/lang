@@ -42,3 +42,13 @@ if count > 5 {
 if name == 'Megatron' {
     count = count + 1
 }
+
+
+struct Point {
+
+}
+
+
+fn get_user(id: Int, name: String) -> User {
+    true
+}

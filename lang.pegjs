@@ -54,27 +54,56 @@ EOF
  	= !.
 
 Function "function declaration"
-	= 'fn' _ name:Identifier arguments:ArgumentsDeclaration _ block:Block {
+	= 'fn' _ name:Identifier '(' args:FunctionArguments? ')' returnType:ReturnType? _ block:Block {
 		return {
-			type: 'function',
-			name: name,
+			type: 'Function',
+			name: name.value,
+			arguments: args,
+			returnType: returnType,
 			line: line(),
 			body: block
 		}
 	}
 
-ArgumentsDeclaration
-	= '(' ')' {
-		return {
-			type: 'arguments_declaration',
-			line: line()
+ReturnType
+	= _ '->' _ type:CamelIdentifier {
+		return type.value;
+	}
+
+FunctionArguments
+	= first:Argument rest:NextArgument* {
+		var args = [first];
+		if (rest) {
+			args = args.concat(rest);
 		}
+
+		return args;
+	}
+
+Argument
+	= variable:Identifier type:ArgumentType? {
+		return {
+			type: 'Argument',
+			name: variable.value,
+			argumentType: type,
+			line: line()
+		};
+	}
+
+ArgumentType
+	= ':' _ type:CamelIdentifier {
+		return type.value;
+	}
+
+NextArgument
+	= ',' _ argument:Argument {
+		return argument;
 	}
 
 Identifier "identifier"
 	= first:[a-z] rest:[a-z0-9_]* {
 		return {
-			type: 'identifier',
+			type: 'Identifier',
 			line: line(),
 			value: first + rest.join('')
 		}
@@ -83,16 +112,16 @@ Identifier "identifier"
 CamelIdentifier "camel case identifier"
 	= first:[A-Z] rest:[A-Za-z0-9]* {
 		return {
-			type: 'camel_identifier',
+			type: 'CamelIdentifier',
 			line: line(),
 			value: first + rest.join('')
 		}
 	}
 
 VariableDeclaration
-	= 'let' _ variable:Identifier type:VariableDeclarationType? value:VariableDeclarationAssignment? {
+	= 'let' _ variable:Identifier type:VariableType? value:VariableDeclarationAssignment? {
 		return {
-			type: 'variable_declaration',
+			type: 'VariableDeclaration',
 			line: line(),
 			variable: variable.value,
 			variableType: type,
@@ -100,7 +129,7 @@ VariableDeclaration
 		}
 	}
 
-VariableDeclarationType
+VariableType
 	= ':' _ type:CamelIdentifier {
 		return type.value;
 	}
@@ -113,7 +142,7 @@ VariableDeclarationAssignment
 If
 	= 'if' _ condition:Expression _ trueCase:Block falseCase:Else? {
 		return {
-			type: 'if',
+			type: 'If',
 			line: line(),
 			condition: condition,
 			trueCase: trueCase,
@@ -129,7 +158,7 @@ Else
 While
 	= 'while' _ condition:Expression _ body:Block {
 		return {
-			type: 'while',
+			type: 'While',
 			line: line(),
 			condition: condition,
 			body: body
@@ -139,7 +168,7 @@ While
 Variable
 	= variable:Identifier {
 		return {
-			type: 'variable',
+			type: 'Variable',
 			name: variable.value,
 			line: line()
 		}
@@ -148,7 +177,7 @@ Variable
 VariableAssignment
 	= variable:Variable _ '=' _ value:Expression {
 		return {
-			type: 'variable_assignment',
+			type: 'VariableAssignment',
 			variable: variable,
 			value: value
 		}
@@ -157,7 +186,7 @@ VariableAssignment
 True
 	= 'true' {
 		return {
-			type: 'bool',
+			type: 'Bool',
 			value: true,
 			line: line()
 		}
@@ -166,7 +195,7 @@ True
 False
 	= 'false' {
 		return {
-			type: 'bool',
+			type: 'Bool',
 			value: false,
 			line: line()
 		}
@@ -175,7 +204,7 @@ False
 Null
 	= 'null' {
 		return {
-			type: 'null',
+			type: 'Null',
 			line: line()
 		}
 	}
@@ -188,7 +217,7 @@ Atom
 Float "float literal"
 	= Digit+ '.' Digit+ {
 		return {
-			type: 'float',
+			type: 'Float',
 			line: line(),
 			value: Number(text())
 		};
@@ -197,7 +226,7 @@ Float "float literal"
 Integer "integer literal"
 	= Digit+ {
 		return {
-			type: 'int',
+			type: 'Integer',
 			line: line(),
 			value: Number(text())
 		};
@@ -209,7 +238,7 @@ Digit "digit"
 String "string literal"
 	= "'" str:[^']* "'" {
 		return {
-			type: 'string',
+			type: 'String',
 			line: line(),
 			value: str.join('')
 		};
@@ -239,10 +268,16 @@ BinaryOperation
 	}
 
 StructDeclaration
-	= 'struct' _ name:CamelIdentifier _ '{' _ properies:StructPropertiesDeclaration _ '}'
+	= 'struct' _ name:CamelIdentifier _ '{' __ '}' {
+		return {
+			type: 'StructDeclaration',
+			name: name.value,
+			line: line()
+		};
+	}
 
 StructPropertiesDeclaration
-	= StructPropertyDeclaration
+	= property:(StructPropertyDeclaration EOS)+
 
 StructPropertyDeclaration
 	= name:Identifier ':' _ type:CamelIdentifier {
@@ -257,7 +292,7 @@ StructPropertyDeclaration
 Block "code block"
 	= '{' __ body:(StatementList __)? '}' {
 		return {
-			type: 'block_statement',
+			type: 'BlockStatement',
 			body: body[0]
 		};
     }
@@ -271,7 +306,7 @@ StatementList
 		});
 
 		return {
-			type: 'statement_list',
+			type: 'StatementList',
 			line: line(),
 			value: result
 		};
@@ -293,6 +328,7 @@ Expression "expession"
 	/ If
 	/ While
 	/ Atom
+	/ StructDeclaration
 	/ BinaryOperation
 	/ VariableAssignment
 	/ Variable
