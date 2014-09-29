@@ -255,6 +255,32 @@ String "string literal"
 		};
 	}
 
+Array
+	= '[' __ items:ArrayItems? __ ']' {
+		return {
+			type: 'Array',
+			items: items,
+			line: line()
+		};
+	}
+
+ArrayItems
+	= first:ArrayItem rest:NextArrayItem* {
+		var items = [first];
+		if (rest) {
+			items = items.concat(rest);
+		}
+
+		return items;
+	}
+
+ArrayItem = Expression
+
+NextArrayItem
+	= (',' / LineTerminatorSequence) __ item:ArrayItem {
+		return item;
+	}
+
 BinaryOperator
 	= '+'
 	/ '-'
@@ -344,6 +370,7 @@ Expression "expession"
 	/ VariableAssignment
 	/ Variable
 	/ Lambda
+	/ Array
 
 SubExpression "expession"
 	= String

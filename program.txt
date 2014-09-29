@@ -57,3 +57,7 @@ let listener = (event: ServerEvent) {
     true
 }
 
+arr = [
+    1, 'some str', 3
+]
+
