@@ -100,6 +100,17 @@ NextArgument
 		return argument;
 	}
 
+Lambda
+	= '(' args:FunctionArguments? ')' returnType:ReturnType? _ block:Block {
+		return {
+			type: 'Lambda',
+			arguments: args,
+			returnType: returnType,
+			line: line(),
+			body: block
+		}
+	}
+
 Identifier "identifier"
 	= first:[a-z] rest:[a-z0-9_]* {
 		return {
@@ -332,6 +343,7 @@ Expression "expession"
 	/ BinaryOperation
 	/ VariableAssignment
 	/ Variable
+	/ Lambda
 
 SubExpression "expession"
 	= String
