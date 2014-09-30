@@ -70,3 +70,6 @@ users = {
         extra: true
     }
 }
+
+
+get_user(42, 0, 'wtf')

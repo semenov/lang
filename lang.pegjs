@@ -365,6 +365,32 @@ NextStructProperty
 		return property;
 	}
 
+CallExpression
+	= target:CallTarget '(' _ arguments:CallArguments? _ ')' {
+		return {
+			type: 'CallExpression',
+			target: target,
+			arguments: arguments,
+			line: line()
+		};
+	}
+
+CallTarget
+	= Variable
+
+CallArguments
+	= first:CallArgument rest:NextCallArgument* {
+		return glue(first, rest)
+	}
+
+CallArgument
+	= Expression
+
+NextCallArgument
+	= ',' __ argument:CallArgument{
+		return argument;
+	}
+
 Block "code block"
 	= '{' __ body:(StatementList __)? '}' {
 		return {
@@ -404,6 +430,7 @@ Expression "expession"
 	/ If
 	/ While
 	/ Atom
+	/ CallExpression
 	/ BinaryOperation
 	/ VariableAssignment
 	/ Variable
