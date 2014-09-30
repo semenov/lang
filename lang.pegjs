@@ -391,6 +391,35 @@ NextCallArgument
 		return argument;
 	}
 
+PropertyAccess
+	= object:BaseObject accessors:Property+ {
+		return {
+			type: 'PropertyAccess',
+			object: object,
+			accessors: accessors,
+			line: line()
+		};
+	}
+
+BaseObject
+	= CallExpression
+	/ Variable
+
+Property
+	= '.' object:BaseObject {
+		return object;
+	}
+
+CollectionItemAccess
+	= collection:Variable '[' key:Expression ']' {
+		return {
+			type: 'CollectionItemAccess',
+			collection: collection,
+			key: key,
+			line: line()
+		};
+	}
+
 Block "code block"
 	= '{' __ body:(StatementList __)? '}' {
 		return {
@@ -430,6 +459,8 @@ Expression "expession"
 	/ If
 	/ While
 	/ Atom
+	/ CollectionItemAccess
+	/ PropertyAccess
 	/ CallExpression
 	/ BinaryOperation
 	/ VariableAssignment

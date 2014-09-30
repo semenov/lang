@@ -72,4 +72,17 @@ users = {
 }
 
 
-get_user(42, 0, 'wtf')
+get_user(420, 'wtf')
+res = ping()
+
+user.friends.count
+
+user.find(user_id).name.length
+
+users[0]
+
+pets['megatron']
+
+
+
+
