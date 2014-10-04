@@ -1,0 +1,6 @@
+let name: String = 'Megatron'
+name = 'Vlad'
+
+let age: Int = 18
+
+let ok = true

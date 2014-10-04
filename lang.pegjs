@@ -15,7 +15,7 @@ Start
 Program
 	= statements:(TopLevelStatementSpaced)* {
 		return {
-			type: 'program',
+			type: 'Program',
 			line: line(),
 			instructions: statements
 		}
@@ -244,7 +244,7 @@ Float "float literal"
 Integer "integer literal"
 	= Digit+ {
 		return {
-			type: 'Integer',
+			type: 'Int',
 			line: line(),
 			value: Number(text())
 		};
@@ -451,8 +451,14 @@ ExpressionStatement
 		return exp;
 	}
 
+ParenExpression
+	= '(' _ expression:Expression _ ')' {
+		return expression;
+	}
+
 Expression "expession"
-	= String
+	= BinaryOperation
+	/ String
 	/ Float
 	/ Integer
 	/ VariableDeclaration
@@ -462,10 +468,10 @@ Expression "expession"
 	/ CollectionItemAccess
 	/ PropertyAccess
 	/ CallExpression
-	/ BinaryOperation
 	/ VariableAssignment
 	/ Variable
 	/ Lambda
+	/ ParenExpression
 	/ Array
 	/ Map
 
@@ -474,4 +480,7 @@ SubExpression "expession"
 	/ Float
 	/ Integer
 	/ Atom
+	/ CollectionItemAccess
+	/ PropertyAccess
+	/ CallExpression
 	/ Variable

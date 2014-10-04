@@ -83,6 +83,8 @@ users[0]
 
 pets['megatron']
 
+user.age > 20
+
 
 
 
