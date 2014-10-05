@@ -323,6 +323,8 @@ BinaryOperator
 	/ '<='
 	/ '=='
 	/ '!='
+	/ '&&'
+	/ '||'
 
 BinaryOperation
 	= left:SubExpression _ operator:BinaryOperator _ right:SubExpression {
@@ -484,3 +486,4 @@ SubExpression "expession"
 	/ PropertyAccess
 	/ CallExpression
 	/ Variable
+	/ ParenExpression

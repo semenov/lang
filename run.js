@@ -13,7 +13,7 @@ console.log(programCode, '\n\n');
 var parser = peg.buildParser(rules);
 var context = {};
 
-try {
+// try {
 	var ast = parser.parse(programCode);
 
 	console.log('=== Syntax tree ===', '\n');
@@ -25,10 +25,10 @@ try {
 	console.log('=== Context ===', '\n');
 	console.log(util.inspect(context, { depth: null, colors: true }));
 	console.log('\n');
-} catch (e) {
-	console.log('=== Error ===', '\n');
-	console.log(util.inspect(e, { depth: null, colors: true }));
-}
+// } catch (e) {
+// 	console.log('=== Error ===', '\n');
+// 	console.log(util.inspect(e, { depth: null, colors: true }));
+// }
 
 function evaluate(node) {
 	if (node.type == 'Program') {
@@ -62,6 +62,158 @@ function evaluate(node) {
 			type: node.type,
 			value: node.value
 		};
+	}
+
+	if (node.type == 'Variable') {
+		if (!_.has(context, node.name)) {
+			throw {
+				name: 'UnknownVariable',
+				line: node.line,
+				data: node
+			};
+		}
+
+		var value = context[node.name].value;
+
+		return {
+			type: value.type,
+			value: value.value
+		};
+	}
+
+	if (node.type == 'BinaryOperation' && node.operator == '==') {
+		var left = evaluate(node.left);
+		var right = evaluate(node.right);
+
+		return {
+			type: 'Bool',
+			value: left.type == right.type && left.value == right.value
+		};
+	}
+
+	if (node.type == 'BinaryOperation' && node.operator == '!=') {
+		var left = evaluate(node.left);
+		var right = evaluate(node.right);
+
+		return {
+			type: 'Bool',
+			value: left.type != right.type || left.value != right.value
+		};
+	}
+
+	if (node.type == 'BinaryOperation' && node.operator == '&&') {
+		var left = evaluate(node.left);
+		var right = evaluate(node.right);
+
+		if (left.type != 'Bool' || right.type != 'Bool') {
+			throw {
+				name: 'TypeMismatch',
+				line: node.line,
+				data: node
+			};
+		}
+
+		return {
+			type: 'Bool',
+			value: left.value && right.value
+		};
+	}
+
+	if (node.type == 'BinaryOperation' && node.operator == '||') {
+		var left = evaluate(node.left);
+		var right = evaluate(node.right);
+
+		if (left.type != 'Bool' || right.type != 'Bool') {
+			throw {
+				name: 'TypeMismatch',
+				line: node.line,
+				data: node
+			};
+		}
+
+		return {
+			type: 'Bool',
+			value: left.value || right.value
+		};
+	}
+
+	function arithmeticOperation(node, fn) {
+		var left = evaluate(node.left);
+		var right = evaluate(node.right);
+
+		var typesOk = (left.type == 'Int' || left.type == 'Float') &&
+			(right.type == 'Int' || right.type == 'Float');
+
+		if (!typesOk) {
+			throw {
+				name: 'TypeMismatch',
+				line: node.line,
+				data: node
+			};
+		}
+
+		var returnType;
+
+		if (left.type == 'Float' || right.type == 'Float') {
+			returnType = 'Float';
+		} else {
+			returnType = 'Int';
+		}
+
+		return {
+			type: returnType,
+			value: fn(left.value, right.value)
+		};
+	}
+
+	if (node.type == 'BinaryOperation' && node.operator == '+') {
+		return arithmeticOperation(node, function(left, right) { return left + right });
+	}
+
+	if (node.type == 'BinaryOperation' && node.operator == '-') {
+		return arithmeticOperation(node, function(left, right) { return left - right });
+	}
+
+	if (node.type == 'BinaryOperation' && node.operator == '*') {
+		return arithmeticOperation(node, function(left, right) { return left - right });
+	}
+
+
+	function comparisonOperation(node, fn) {
+		var left = evaluate(node.left);
+		var right = evaluate(node.right);
+
+		var typesOk = (left.type == 'Int' || left.type == 'Float') &&
+			(right.type == 'Int' || right.type == 'Float');
+
+		if (!typesOk) {
+			throw {
+				name: 'TypeMismatch',
+				line: node.line,
+				data: node
+			};
+		}
+
+		return {
+			type: 'Bool',
+			value: fn(left.value, right.value)
+		};
+	}
+
+	if (node.type == 'BinaryOperation' && node.operator == '>') {
+		return arithmeticOperation(node, function(left, right) { return left > right });
+	}
+
+	if (node.type == 'BinaryOperation' && node.operator == '>=') {
+		return arithmeticOperation(node, function(left, right) { return left >= right });
+	}
+
+	if (node.type == 'BinaryOperation' && node.operator == '<') {
+		return arithmeticOperation(node, function(left, right) { return left < right });
+	}
+
+	if (node.type == 'BinaryOperation' && node.operator == '<=') {
+		return arithmeticOperation(node, function(left, right) { return left <= right });
 	}
 
 	if (node.type == 'VariableDeclaration') {
