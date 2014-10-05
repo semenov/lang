@@ -221,7 +221,7 @@ function evaluate(node) {
 
 		if (condition.type != 'Bool') {
 			throw {
-				name: 'TypeMismatch2',
+				name: 'TypeMismatch',
 				line: node.line,
 				data: node
 			};
@@ -231,6 +231,29 @@ function evaluate(node) {
 
 		return evaluate(chosenNode);
 	}
+
+
+	if (node.type == 'While') {
+		while (true) {
+			var condition = evaluate(node.condition);
+			if (condition.type != 'Bool') {
+				throw {
+					name: 'TypeMismatch',
+					line: node.line,
+					data: node
+				};
+			}
+
+			if (condition.value) {
+				evaluate(node.body);
+			} else {
+				break;
+			}
+		}
+
+		return null;
+	}
+
 
 	if (node.type == 'Block') {
 		_.each(node.instructions, evaluate);

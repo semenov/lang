@@ -16,3 +16,9 @@ if age > 0 {
 } else {
 	ok = false
 }
+
+let i:Int = 0
+
+while i < 5 {
+	i = i + 1
+}
