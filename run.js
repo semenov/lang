@@ -13,7 +13,7 @@ console.log(programCode, '\n\n');
 var parser = peg.buildParser(rules);
 var context = {};
 
-// try {
+try {
 	var ast = parser.parse(programCode);
 
 	console.log('=== Syntax tree ===', '\n');
@@ -25,10 +25,10 @@ var context = {};
 	console.log('=== Context ===', '\n');
 	console.log(util.inspect(context, { depth: null, colors: true }));
 	console.log('\n');
-// } catch (e) {
-// 	console.log('=== Error ===', '\n');
-// 	console.log(util.inspect(e, { depth: null, colors: true }));
-// }
+} catch (e) {
+	console.log('=== Error ===', '\n');
+	console.log(util.inspect(e, { depth: null, colors: true }));
+}
 
 function evaluate(node) {
 	if (node.type == 'Program') {
@@ -175,7 +175,7 @@ function evaluate(node) {
 	}
 
 	if (node.type == 'BinaryOperation' && node.operator == '*') {
-		return arithmeticOperation(node, function(left, right) { return left - right });
+		return arithmeticOperation(node, function(left, right) { return left * right });
 	}
 
 
@@ -201,19 +201,40 @@ function evaluate(node) {
 	}
 
 	if (node.type == 'BinaryOperation' && node.operator == '>') {
-		return arithmeticOperation(node, function(left, right) { return left > right });
+		return comparisonOperation(node, function(left, right) { return left > right });
 	}
 
 	if (node.type == 'BinaryOperation' && node.operator == '>=') {
-		return arithmeticOperation(node, function(left, right) { return left >= right });
+		return comparisonOperation(node, function(left, right) { return left >= right });
 	}
 
 	if (node.type == 'BinaryOperation' && node.operator == '<') {
-		return arithmeticOperation(node, function(left, right) { return left < right });
+		return comparisonOperation(node, function(left, right) { return left < right });
 	}
 
 	if (node.type == 'BinaryOperation' && node.operator == '<=') {
-		return arithmeticOperation(node, function(left, right) { return left <= right });
+		return comparisonOperation(node, function(left, right) { return left <= right });
+	}
+
+	if (node.type == 'If') {
+		var condition = evaluate(node.condition);
+
+		if (condition.type != 'Bool') {
+			throw {
+				name: 'TypeMismatch2',
+				line: node.line,
+				data: node
+			};
+		}
+
+		var chosenNode = (condition.value ? node.trueCase : node.falseCase);
+
+		return evaluate(chosenNode);
+	}
+
+	if (node.type == 'Block') {
+		_.each(node.instructions, evaluate);
+		return null;
 	}
 
 	if (node.type == 'VariableDeclaration') {
@@ -250,7 +271,7 @@ function evaluate(node) {
 
 		var variable = context[variableName];
 
-		if (variable.type != value.type) {
+		if (variable.type && variable.type != value.type) {
 			throw {
 				name: 'TypeMismatch',
 				line: node.line,

@@ -423,10 +423,10 @@ CollectionItemAccess
 	}
 
 Block "code block"
-	= '{' __ body:(StatementList __)? '}' {
+	= '{' __ instructions:(StatementList __)? '}' {
 		return {
-			type: 'BlockStatement',
-			body: body[0]
+			type: 'Block',
+			instructions: instructions[0]
 		};
     }
 
@@ -438,11 +438,7 @@ StatementList
 			result.push(item[1]);
 		});
 
-		return {
-			type: 'StatementList',
-			line: line(),
-			value: result
-		};
+		return result;
 	}
 
 Statement

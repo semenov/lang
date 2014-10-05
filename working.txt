@@ -3,7 +3,7 @@ name = 'Vlad'
 
 let age: Int = 18
 
-let ok = true
+let ok = false
 
 let works = (age != 19)
 
@@ -11,4 +11,8 @@ let logic = (age == 18) && true
 
 let comparison = (age > 21)
 
-age = age + 3
+if age > 0 {
+	ok = true
+} else {
+	ok = false
+}
