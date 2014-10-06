@@ -13,22 +13,24 @@ console.log(programCode, '\n\n');
 var parser = peg.buildParser(rules);
 var context = {};
 
-try {
+// try {
 	var ast = parser.parse(programCode);
 
 	console.log('=== Syntax tree ===', '\n');
 	console.log(util.inspect(ast, { depth: null, colors: true }));
 	console.log('\n');
 
+	console.log('=== Output ===', '\n');
+
 	evaluate(ast);
 
 	console.log('=== Context ===', '\n');
 	console.log(util.inspect(context, { depth: null, colors: true }));
 	console.log('\n');
-} catch (e) {
-	console.log('=== Error ===', '\n');
-	console.log(util.inspect(e, { depth: null, colors: true }));
-}
+// } catch (e) {
+// 	console.log('=== Error ===', '\n');
+// 	console.log(util.inspect(e, { depth: null, colors: true }));
+// }
 
 function evaluate(node) {
 	if (node.type == 'Program') {
@@ -64,6 +66,13 @@ function evaluate(node) {
 		};
 	}
 
+	if (node.type == 'Array') {
+		return {
+			type: node.type,
+			items: node.items
+		};
+	}
+
 	if (node.type == 'Variable') {
 		if (!_.has(context, node.name)) {
 			throw {
@@ -75,10 +84,7 @@ function evaluate(node) {
 
 		var value = context[node.name].value;
 
-		return {
-			type: value.type,
-			value: value.value
-		};
+		return _.omit(value, 'line');
 	}
 
 	if (node.type == 'BinaryOperation' && node.operator == '==') {
@@ -259,6 +265,42 @@ function evaluate(node) {
 		_.each(node.instructions, evaluate);
 		return null;
 	}
+
+	if (node.type == 'Use') {
+
+
+		var mod = require('./modules/' + node.module);
+
+		context[node.module] = {
+			type: null,
+			value: {
+				type: 'Module',
+				module: mod
+			}
+		};
+
+		return null;
+	}
+
+	if (node.type == 'PropertyAccess') {
+		var value = evaluate(node.object);
+
+		_.each(node.accessors, function(accessor) {
+			if (accessor.type == 'CallExpression') {
+				var propertyName = accessor.target.name;
+				if (value.type == 'Module') {
+					var mod = value.module;
+					var fn = mod.functions[propertyName].fn;
+					var args = _.map(accessor.arguments, evaluate);
+					value = fn.apply(null, args);
+				}
+			}
+		});
+
+		return value;
+	}
+
+
 
 	if (node.type == 'VariableDeclaration') {
 		var type = node.variableType;

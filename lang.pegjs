@@ -27,7 +27,8 @@ TopLevelStatementSpaced
 	}
 
 TopLevelStatement
-	= Function
+	= Use
+	/ Function
 	/ Struct
 	/ Statement
 
@@ -64,6 +65,16 @@ EOS
 
 EOF
  	= !.
+
+
+Use
+	= 'use' _ name:Identifier {
+		return {
+			type: 'Use',
+			module: name.value,
+			line: line()
+		}
+	}
 
 Function "function declaration"
 	= 'fn' _ name:Identifier '(' args:FunctionArguments? ')' returnType:ReturnType? _ block:Block {
