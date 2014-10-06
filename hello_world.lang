@@ -1,9 +1,17 @@
+#!/usr/bin/env ./lang
+
 use io
+use process
 
 let good_mood = false
 
 if good_mood {
 	io.print('Hello world')
 } else {
-	io.print('Muahaha!')
+	io.print('Muahaha!')s
 }
+
+# Prints command line arguments
+
+io.print(process.arguments())
+

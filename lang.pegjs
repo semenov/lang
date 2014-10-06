@@ -27,10 +27,21 @@ TopLevelStatementSpaced
 	}
 
 TopLevelStatement
-	= Use
+	= Comment
+	/ Use
 	/ Function
 	/ Struct
 	/ Statement
+
+Comment
+	= '#' text:[^\n\r\u2028\u2029]* {
+		return {
+			type: 'Comment',
+			text: text.join(''),
+			line: line()
+		}
+	}
+
 
 WhiteSpace "whitespace"
   = '\t'

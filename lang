@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 var peg = require('pegjs');
 var cg = require('escodegen');
 var fs = require('fs');
