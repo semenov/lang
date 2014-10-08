@@ -1,7 +1,7 @@
 #!/usr/bin/env ./lang
 
 use io
-use process
+use system
 
 let good_mood = false
 
@@ -14,5 +14,6 @@ if good_mood {
 
 # Prints command line arguments
 
-io.print(process.arguments())
+io.print(system.exec('pwd'))
+io.print('Such sync!')
 

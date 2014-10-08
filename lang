@@ -317,9 +317,9 @@ function evaluate(node) {
 					var mod = value.module;
 					var fn = mod.functions[propertyName].fn;
 					var promises = _.map(accessor.arguments, evaluate);
-					q.all(promises).then(function(args) {
+					return q.all(promises).then(function(args) {
 						var result = fn.apply(null, args);
-						q.resolve(result);
+						return result;
 					});
 				}
 			} else {
@@ -337,8 +337,6 @@ function evaluate(node) {
 			// 		}
 			// 	}
 			// });
-
-			return value;
 		});
 	}
 
