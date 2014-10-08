@@ -8,7 +8,8 @@ let good_mood = false
 if good_mood {
 	io.print('Hello world')
 } else {
-	io.print('Muahaha!')s
+	io.print('Muahaha!')
+	good_mood = true
 }
 
 # Prints command line arguments

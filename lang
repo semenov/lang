@@ -8,6 +8,7 @@ var rules = fs.readFileSync('lang.pegjs', 'utf-8');
 var programFile = process.argv[2] || 'program.txt';
 var programCode = fs.readFileSync(programFile, 'utf-8');
 var util = require('util');
+var q = require('kew');
 
 console.log('=== Program ===', '\n');
 console.log(programCode, '\n\n');
@@ -24,154 +25,179 @@ var context = {};
 
 	console.log('=== Output ===', '\n');
 
-	evaluate(ast);
+	evaluate(ast).then(function() {
+		console.log('=== Context ===', '\n');
+		console.log(util.inspect(context, { depth: null, colors: true }));
+		console.log('\n');
+	}).fail(function(e) {
+		console.log('=== Error ===', '\n');
+		console.log(util.inspect(e, { depth: null, colors: true }));
+	});
 
-	console.log('=== Context ===', '\n');
-	console.log(util.inspect(context, { depth: null, colors: true }));
-	console.log('\n');
 // } catch (e) {
 // 	console.log('=== Error ===', '\n');
 // 	console.log(util.inspect(e, { depth: null, colors: true }));
 // }
 
+function resolve() {
+	var defer = q.defer();
+	var evaledArgs = _.map(arguments, evaluate);
+	q.all(evaledArgs).then(function(results) {
+		defer.resolve.apply(defer, results);
+	}).fail(defer.reject);
+
+	return defer.promise;
+}
+
+function resolveSerial(instructions) {
+	if (_.size(instructions) > 0) {
+		var result = evaluate(_.first(instructions));
+		_.each(_.rest(instructions), function(instruction) {
+			result = result.then(function() {
+				return evaluate(instruction);
+			});
+		});
+		return result;
+	} else {
+		q.resolve(null);
+	}
+
+}
+
+
 function evaluate(node) {
 	if (node.type == 'Program') {
-		_.each(node.instructions, evaluate);
-		return null;
+		return resolveSerial(node.instructions);
 	}
 
 	if (node.type == 'String') {
-		return {
+		return q.resolve({
 			type: node.type,
 			value: node.value
-		};
+		});
 	}
 
 	if (node.type == 'Int') {
-		return {
+		return q.resolve({
 			type: node.type,
 			value: node.value
-		};
+		});
 	}
 
 	if (node.type == 'Float') {
-		return {
+		return q.resolve({
 			type: node.type,
 			value: node.value
-		};
+		});
 	}
 
 	if (node.type == 'Bool') {
-		return {
+		return q.resolve({
 			type: node.type,
 			value: node.value
-		};
+		});
 	}
 
 	if (node.type == 'Array') {
-		return {
+		return q.resolve({
 			type: node.type,
 			items: node.items
-		};
+		});
 	}
 
 	if (node.type == 'Variable') {
 		if (!_.has(context, node.name)) {
-			throw {
+			q.reject({
 				name: 'UnknownVariable',
 				line: node.line,
 				data: node
-			};
+			});
 		}
 
 		var value = context[node.name].value;
 
-		return _.omit(value, 'line');
+		return q.resolve(_.omit(value, 'line'));
 	}
 
 	if (node.type == 'BinaryOperation' && node.operator == '==') {
-		var left = evaluate(node.left);
-		var right = evaluate(node.right);
-
-		return {
-			type: 'Bool',
-			value: left.type == right.type && left.value == right.value
-		};
+		return resolve(node.left, node.right).then(function(left, right) {
+			return {
+				type: 'Bool',
+				value: left.type == right.type && left.value == right.value
+			};
+		});
 	}
 
 	if (node.type == 'BinaryOperation' && node.operator == '!=') {
-		var left = evaluate(node.left);
-		var right = evaluate(node.right);
-
-		return {
-			type: 'Bool',
-			value: left.type != right.type || left.value != right.value
-		};
+		return resolve(node.left, node.right).then(function(left, right) {
+			return {
+				type: 'Bool',
+				value: left.type != right.type || left.value != right.value
+			};
+		});
 	}
 
 	if (node.type == 'BinaryOperation' && node.operator == '&&') {
-		var left = evaluate(node.left);
-		var right = evaluate(node.right);
+		return resolve(node.left, node.right).then(function(left, right) {
+			if (left.type != 'Bool' || right.type != 'Bool') {
+				throw {
+					name: 'TypeMismatch',
+					line: node.line,
+					data: node
+				};
+			}
 
-		if (left.type != 'Bool' || right.type != 'Bool') {
-			throw {
-				name: 'TypeMismatch',
-				line: node.line,
-				data: node
+			return {
+				type: 'Bool',
+				value: left.value && right.value
 			};
-		}
-
-		return {
-			type: 'Bool',
-			value: left.value && right.value
-		};
+		});
 	}
 
 	if (node.type == 'BinaryOperation' && node.operator == '||') {
-		var left = evaluate(node.left);
-		var right = evaluate(node.right);
+		return resolve(node.left, node.right).then(function(left, right) {
 
-		if (left.type != 'Bool' || right.type != 'Bool') {
-			throw {
-				name: 'TypeMismatch',
-				line: node.line,
-				data: node
+			if (left.type != 'Bool' || right.type != 'Bool') {
+				throw {
+					name: 'TypeMismatch',
+					line: node.line,
+					data: node
+				};
+			}
+
+			return {
+				type: 'Bool',
+				value: left.value || right.value
 			};
-		}
-
-		return {
-			type: 'Bool',
-			value: left.value || right.value
-		};
+		});
 	}
 
 	function arithmeticOperation(node, fn) {
-		var left = evaluate(node.left);
-		var right = evaluate(node.right);
+		return resolve(node.left, node.right).then(function(left, right) {
+			var typesOk = (left.type == 'Int' || left.type == 'Float') &&
+				(right.type == 'Int' || right.type == 'Float');
 
-		var typesOk = (left.type == 'Int' || left.type == 'Float') &&
-			(right.type == 'Int' || right.type == 'Float');
+			if (!typesOk) {
+				throw {
+					name: 'TypeMismatch',
+					line: node.line,
+					data: node
+				};
+			}
 
-		if (!typesOk) {
-			throw {
-				name: 'TypeMismatch',
-				line: node.line,
-				data: node
+			var returnType;
+
+			if (left.type == 'Float' || right.type == 'Float') {
+				returnType = 'Float';
+			} else {
+				returnType = 'Int';
+			}
+
+			return {
+				type: returnType,
+				value: fn(left.value, right.value)
 			};
-		}
-
-		var returnType;
-
-		if (left.type == 'Float' || right.type == 'Float') {
-			returnType = 'Float';
-		} else {
-			returnType = 'Int';
-		}
-
-		return {
-			type: returnType,
-			value: fn(left.value, right.value)
-		};
+		});
 	}
 
 	if (node.type == 'BinaryOperation' && node.operator == '+') {
@@ -188,24 +214,23 @@ function evaluate(node) {
 
 
 	function comparisonOperation(node, fn) {
-		var left = evaluate(node.left);
-		var right = evaluate(node.right);
+		return resolve(node.left, node.right).then(function(left, right) {
+			var typesOk = (left.type == 'Int' || left.type == 'Float') &&
+				(right.type == 'Int' || right.type == 'Float');
 
-		var typesOk = (left.type == 'Int' || left.type == 'Float') &&
-			(right.type == 'Int' || right.type == 'Float');
+			if (!typesOk) {
+				throw {
+					name: 'TypeMismatch',
+					line: node.line,
+					data: node
+				};
+			}
 
-		if (!typesOk) {
-			throw {
-				name: 'TypeMismatch',
-				line: node.line,
-				data: node
+			return {
+				type: 'Bool',
+				value: fn(left.value, right.value)
 			};
-		}
-
-		return {
-			type: 'Bool',
-			value: fn(left.value, right.value)
-		};
+		});
 	}
 
 	if (node.type == 'BinaryOperation' && node.operator == '>') {
@@ -225,25 +250,7 @@ function evaluate(node) {
 	}
 
 	if (node.type == 'If') {
-		var condition = evaluate(node.condition);
-
-		if (condition.type != 'Bool') {
-			throw {
-				name: 'TypeMismatch',
-				line: node.line,
-				data: node
-			};
-		}
-
-		var chosenNode = (condition.value ? node.trueCase : node.falseCase);
-
-		return evaluate(chosenNode);
-	}
-
-
-	if (node.type == 'While') {
-		while (true) {
-			var condition = evaluate(node.condition);
+		return evaluate(node.condition).then(function(condition) {
 			if (condition.type != 'Bool') {
 				throw {
 					name: 'TypeMismatch',
@@ -252,24 +259,40 @@ function evaluate(node) {
 				};
 			}
 
-			if (condition.value) {
-				evaluate(node.body);
-			} else {
-				break;
-			}
-		}
+			var chosenNode = (condition.value ? node.trueCase : node.falseCase);
 
-		return null;
+			return evaluate(chosenNode);
+		});
 	}
 
 
+	// if (node.type == 'While') {
+	// 	while (true) {
+	// 		var condition = evaluate(node.condition);
+	// 		if (condition.type != 'Bool') {
+	// 			throw {
+	// 				name: 'TypeMismatch',
+	// 				line: node.line,
+	// 				data: node
+	// 			};
+	// 		}
+
+	// 		if (condition.value) {
+	// 			evaluate(node.body);
+	// 		} else {
+	// 			break;
+	// 		}
+	// 	}
+
+	// 	return null;
+	// }
+
+	/////
 	if (node.type == 'Block') {
-		_.each(node.instructions, evaluate);
-		return null;
+		return resolveSerial(node.instructions);
 	}
 
 	if (node.type == 'Use') {
-
 
 		var mod = require('./modules/' + node.module);
 
@@ -281,75 +304,92 @@ function evaluate(node) {
 			}
 		};
 
-		return null;
+		return q.resolve(null);
 	}
 
 	if (node.type == 'PropertyAccess') {
-		var value = evaluate(node.object);
+		return evaluate(node.object).then(function(value) {
 
-		_.each(node.accessors, function(accessor) {
+			var accessor = _.first(node.accessors);
 			if (accessor.type == 'CallExpression') {
 				var propertyName = accessor.target.name;
 				if (value.type == 'Module') {
 					var mod = value.module;
 					var fn = mod.functions[propertyName].fn;
-					var args = _.map(accessor.arguments, evaluate);
-					value = fn.apply(null, args);
+					var promises = _.map(accessor.arguments, evaluate);
+					q.all(promises).then(function(args) {
+						var result = fn.apply(null, args);
+						q.resolve(result);
+					});
 				}
+			} else {
+				return q.resolve(null)
 			}
-		});
 
-		return value;
+			// _.each(node.accessors, function(accessor) {
+			// 	if (accessor.type == 'CallExpression') {
+			// 		var propertyName = accessor.target.name;
+			// 		if (value.type == 'Module') {
+			// 			var mod = value.module;
+			// 			var fn = mod.functions[propertyName].fn;
+			// 			var args = _.map(accessor.arguments, evaluate);
+			// 			value = fn.apply(null, args);
+			// 		}
+			// 	}
+			// });
+
+			return value;
+		});
 	}
 
 
 
 	if (node.type == 'VariableDeclaration') {
 		var type = node.variableType;
-		var value = evaluate(node.value);
+		return evaluate(node.value).then(function(value) {
+			if (type && value && type != value.type) {
+				throw {
+					name: 'TypeMismatch',
+					line: node.line,
+					data: node
+				};
+			}
 
-		if (type && value && type != value.type) {
-			throw {
-				name: 'TypeMismatch',
-				line: node.line,
-				data: node
+			context[node.variable] = {
+				type: node.variableType,
+				value: value
 			};
-		}
 
-		context[node.variable] = {
-			type: node.variableType,
-			value: value
-		};
-
-		return value;
+			return value;
+		});
 	}
 
 	if (node.type == 'VariableAssignment') {
 		var variableName = node.variable.name;
-		var value = evaluate(node.value);
+		return evaluate(node.value).then(function(value) {
+			if (!_.has(context, variableName)) {
+				throw {
+					name: 'UnknownVariable',
+					line: node.line,
+					data: node
+				};
+			}
 
-		if (!_.has(context, variableName)) {
-			throw {
-				name: 'UnknownVariable',
-				line: node.line,
-				data: node
-			};
-		}
+			var variable = context[variableName];
 
-		var variable = context[variableName];
+			if (variable.type && variable.type != value.type) {
+				throw {
+					name: 'TypeMismatch',
+					line: node.line,
+					data: node
+				};
+			}
 
-		if (variable.type && variable.type != value.type) {
-			throw {
-				name: 'TypeMismatch',
-				line: node.line,
-				data: node
-			};
-		}
+			variable.value = value;
 
-		variable.value = value;
-
-		return value;
+			return value;
+		});
 	}
 
-
+	return q.resolve(null);
 }
